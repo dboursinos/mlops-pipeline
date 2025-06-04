@@ -1,0 +1,35 @@
+services:
+  s3:
+    restart: always
+    image: quay.io/minio/minio:RELEASE.2025-05-24T17-08-30Z
+    volumes:
+      - ./minio-data:/data
+    command:
+      - server
+      - /data
+      - --console-address
+      - ":9001"
+    env_file: "s3.env"
+  db:
+    restart: always
+    image: postgres:17.5-bookworm
+    container_name: mlflow_db
+    environment:
+      POSTGRES_DB: mlflow
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+    volumes:
+      - ./db:/var/lib/postgresql/data
+  mlflow:
+    restart: always
+    image: mlflow_server
+    build:
+      context: .
+      dockerfile: ./mlflow.Dockerfile
+    container_name: mlflow_server
+    env_file: "mlflow.env"
+    ports:
+      - "5000:5000"
+    command: mlflow server --dev --host 0.0.0.0 --backend-store-uri postgresql+psycopg2://admin:admin@db:5432/mlflow --default-artifact-root s3://mlartifacts
+
+
