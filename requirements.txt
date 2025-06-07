@@ -3,3 +3,5 @@ mlflow==2.22.0
 pandas==2.2.3
 numpy==2.2.6
 dvc
+boto3
+dotenv

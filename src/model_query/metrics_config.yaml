@@ -1,0 +1,32 @@
+metrics_to_sort:
+  - name: train_accuracy
+    ascending: false
+  - name: test_accuracy
+    ascending: true
+parameters_to_include:
+  - {name: C, type: float}
+  #- {name: learning_rate, type: float}
+  #- {name: batch_size, type: int}
+  #- {name: model_type, type: str}
+parameter_filters:
+  numeric_ranges:
+    C:
+      min: 0.2
+      max: 0.7
+    #learning_rate:
+      #min: 0.001
+      #max: 0.01
+    #batch_size:
+      #min: 32
+  #categorical:
+    #model_type:
+      #values: ["resnet50", "vit-base"]
+      # mode: "include" or "exclude" (default: include)
+experiment_filter:
+  include:
+    experiment_names: ["Experiment1", "Production Models", "Research"]
+  # exclude: ["Archived"]  # Alternative
+output:
+  report_file: "./src/reports/model_report_{date}.txt"
+  plots_dir: "./src/analysis_plots"
+  correlation_threshold: 0.3  # Minimum absolute correlation to report

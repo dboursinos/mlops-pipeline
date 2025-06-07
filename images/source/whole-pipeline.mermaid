@@ -1,0 +1,61 @@
+graph TD
+    %% Input Nodes
+    A[Training Data]:::input --> T[Training Orchestrator]:::orchestrator
+    B[Model Architecture]:::input --> T
+    C[Hyperparameters]:::input --> T
+
+    %% Training Cluster
+    subgraph K8sTrain["Kubernetes Cluster"]
+        Pod1[Pod 1]:::trainPod
+        Pod2[Pod 2]:::trainPod
+        PodN[Pod N]:::trainPod
+        style PodN stroke-dasharray:3,stroke-width:2px
+    end
+    style K8sTrain fill:#B3E5FC,stroke:#03A9F4,rx:10px,ry:10px
+    T --> K8sTrain
+
+    %% Tracking System
+    Pod1 --> M[MLFlow Tracking]:::mlflow
+    Pod2 --> M
+    PodN --> M
+    M --> S3[(Model/Artifact Storage<br>AWS S3)]:::s3
+    M --> PG[(Metrics Storage<br>PostgreSQL)]:::postgres
+
+    %% Deployment Pipeline
+    PG --> MS[Model Selector]:::selector
+    S3 --> MS
+    MS --> MD[Model Deployment]:::deployer
+
+    %% Production Cluster
+    subgraph K8sProd["Kubernetes Cluster"]
+        DUMMY[ ]:::hidden
+        I[Ingress]:::ingress
+        ProdPod1[Pod 1]:::prodPod
+        ProdPod2[Pod 2]:::prodPod
+        ProdPodN[Pod N]:::prodPod
+        style ProdPodN stroke-dasharray:3,stroke-width:2px
+        I --> ProdPod1
+        I --> ProdPod2
+        I --> ProdPodN
+    end
+    style K8sProd fill:#B3E5FC,stroke:#03A9F4,rx:10px,ry:10px
+    MD --> K8sProd
+
+    %% User Interaction
+    User[Inference Requests]:::user --> API[REST API]:::api
+    API --> I
+
+    %% CSS Styling
+    classDef input fill:#E0BBE4,stroke:#9C27B0,color:#000
+    classDef orchestrator fill:#FFEB3B,stroke:#F9A825,color:#000
+    classDef trainPod fill:#FFCC80,stroke:#E65100,color:#000
+    classDef prodPod fill:#FFCC80,stroke:#E65100,color:#000
+    classDef mlflow fill:#F48FB1,stroke:#E91E63,color:#000
+    classDef s3 fill:#E0E0E0,stroke:#757575,color:#000
+    classDef postgres fill:#E0E0E0,stroke:#757575,color:#000
+    classDef selector fill:#FFEB3B,stroke:#F9A825,color:#000
+    classDef deployer fill:#FFEB3B,stroke:#F9A825,color:#000
+    classDef ingress fill:#DCEDC8,stroke:#43A047,color:#000
+    classDef api fill:#F3E5F5,stroke:#9C27B0,color:#000
+    classDef user fill:#E0BBE4,stroke:#9C27B0,color:#000
+    classDef hidden fill:transparent,stroke:transparent

@@ -1,0 +1,7 @@
+graph LR
+    subgraph Kubernetes Cluster
+        A[Ingress] --> B[Model Pod 1]
+        A --> C[Model Pod 2]
+        B & C -->|Load Requests| D[MLFlow Tracking Server]
+        D -->|Fetch Model| E[(MinIO Artifacts)]
+    end

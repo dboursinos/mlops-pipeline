@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mlflow-model-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mlflow-model
+  template:
+    metadata:
+      labels:
+        app: mlflow-model
+    spec:
+      containers:
+      - name: mlflow-model
+        image: 192.168.1.67:5050/ml-production
+        ports:
+        - containerPort: 5001
+        env:
+        - name: MLFLOW_MODEL_URI
+          value: "{mlflow_model_uri}"
+        - name: MLFLOW_TRACKING_URI
+          value: "{mlflow_tracking_uri}"
+        - name: MLFLOW_S3_ENDPOINT_URL
+          value: "{mlflow_s3_endpoint_url}"
+        - name: MLFLOW_S3_IGNORE_TLS
+          value: "{mlflow_s3_ignore_tls}"
+        - name: AWS_ACCESS_KEY_ID
+          value: "{minio_access_key}"
+        - name: AWS_SECRET_ACCESS_KEY
+          value: "{minio_secret_key}"

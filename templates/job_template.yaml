@@ -1,0 +1,38 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ml-training-job-{C}-{random_state}
+spec:
+  template:
+    spec:
+      containers:
+      - name: ml-training
+        image: 192.168.1.67:5050/ml_training
+        env:
+        - name: C
+          value: "{C}"
+        - name: RANDOM_STATE
+          value: "{random_state}"
+        - name: CV
+          value: "{cv}"
+        - name: MINIO_ENDPOINT
+          value: "{minio_endpoint}"
+        - name: MINIO_ACCESS_KEY
+          value: "{minio_access_key}"
+        - name: MINIO_SECRET_KEY
+          value: "{minio_secret_key}"
+        - name: MINIO_BUCKET
+          value: "{minio_bucket}"
+        - name: MLFLOW_TRACKING_URI
+          value: "{mlflow_tracking_uri}"
+        - name: MLFLOW_EXPERIMENT_NAME
+          value: "{mlflow_experiment_name}"
+        - name: MLFLOW_S3_ENDPOINT_URL
+          value: "{mlflow_s3_endpoint_url}"
+        - name: AWS_ACCESS_KEY_ID
+          value: "{minio_access_key}"
+        - name: AWS_SECRET_ACCESS_KEY
+          value: "{minio_secret_key}"
+        imagePullPolicy: Always
+      restartPolicy: Never
+  backoffLimit: 4

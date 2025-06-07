@@ -44,7 +44,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 
 # Copy the training script
-COPY ../train.py .
+COPY ../src/training/train.py .
 
 # Command to run the training script
 CMD ["python", "train.py"]

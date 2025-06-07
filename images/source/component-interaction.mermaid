@@ -1,0 +1,6 @@
+sequenceDiagram
+    Training Job->>+MLFlow: Log metrics/params
+    MLFlow->>+PostgreSQL: Store metadata
+    MLFlow->>+MinIO: Save model artifacts
+    Inference API->>MLFlow: Fetch model
+    MLFlow->>MinIO: Retrieve artifacts

@@ -5,7 +5,13 @@ build/
 dist/
 wheels/
 *.egg-info
+*.null-ls_*
 
 # Virtual environments
 .venv
 /data
+
+# Generated files
+/src/reports/
+/src/analysis_plots/
+/docker/minio-data/
