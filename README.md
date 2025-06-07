@@ -35,7 +35,7 @@ Inference Pipeline:
 
 ## Pipeline Structure
 
-![Pipeline Structure](./images/pipeline.svg)
+<img src="./images/pipeline.svg"/>
 
 ## Setup & Usage
 
