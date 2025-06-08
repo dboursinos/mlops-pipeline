@@ -52,7 +52,7 @@ This diagram illustrates an end-to-end machine learning pipeline, from training 
     - The model deployment orchestrator deploys the best model to a Docker container or to a Kubernetes cluster where it creates multiple replicas connected to an Ingress.
     - Inference requests from users are routed through a REST API and Ingress to the deployed model pods.
 
-Bellow is a high-level overview of the component interactions:
+Below is a high-level overview of the component interactions:
 
 <img src="./images/component-interaction.svg" width="100%" height="auto"/>
 
