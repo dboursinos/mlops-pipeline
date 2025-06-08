@@ -80,7 +80,6 @@ with mlflow.start_run():
 
     # Perform cross-validation
     for fold, (train_index, val_index) in enumerate(skf.split(X, y)):
-        # print(f"Fold {fold + 1}/{cv}")
         X_train, X_val = X[train_index], X[val_index]
         y_train, y_val = y[train_index], y[val_index]
 
