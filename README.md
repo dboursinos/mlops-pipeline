@@ -125,8 +125,8 @@ make inference-one-input
 | generate-data     | Generate synthetic data              |
 | compose-logs      | View container logs                  |
 
-## Configuration
+<!--## Configuration-->
 
-- Set model registry location in `src/orchestrators/`
-- Configure Kubernetes manifests for scaling
-- Update MinIO credentials in `compose.yaml`
+<!--- Set model registry location in `src/orchestrators/`-->
+<!--- Configure Kubernetes manifests for scaling-->
+<!--- Update MinIO credentials in `compose.yaml`-->
