@@ -37,6 +37,21 @@ Inference Pipeline:
 
 <img src="./images/pipeline.svg" width="100%" height="auto"/>
 
+This diagram illustrates an end-to-end machine learning pipeline, from training to deployment.
+
+1. **Training Phase:**
+    - The pipeline begins with training data, model architecture, and hyperparameters as inputs to the Training Orchestrator.
+    - The Training Orchestrator creates training jobs and distributes them either to a Kubernetes cluster with multiple nodes for distributed training, or to multiple docker containers.
+    - During training, parameters, metrics and artifacts produced by each training job are tracked using MLflow.
+    - Models and artifacts are stored in AWS S3, while metrics are stored in PostgreSQL.
+      - MLFlow supports other artifact storage options like Azure Blob Storage, Google Cloud Storage, the local filesystem, SFTP, NFS, HDFS, and Databricks DBFS.
+      - MLFlow also supports multiple backends, including PostgreSQL, MySQL, and SQLite.
+
+2. **Deployment Phase:**
+    - The Model Selector chooses the best model based on some chosen metrics and parameters for each model and retrieves its runid that is used for retrieval and deployment.
+    - The model deployment orchestrator deploys the best model to a Docker container or to a Kubernetes cluster where it creates multiple replicas connected to an Ingress.
+    - Inference requests from users are routed through a REST API and Ingress to the deployed model pods.
+
 ## Setup & Usage
 
 ### 1. Start Infrastructure
