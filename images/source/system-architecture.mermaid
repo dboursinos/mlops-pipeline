@@ -1,9 +1,0 @@
-graph TD
-    A[Training Data] --> B[Hyperparameter Tuning]
-    B --> C[Docker/Kubernetes]
-    C -->|Logs| D[MLFlow]
-    D --> E[(PostgreSQL)]
-    D --> F[(MinIO/S3)]
-    D --> G[Inference API]
-    G --> H[Kubernetes Replicas]
-    G --> I[Docker Container]
