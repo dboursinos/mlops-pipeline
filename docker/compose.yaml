@@ -27,7 +27,6 @@ services:
       - ./db:/var/lib/postgresql/data
   mlflow:
     restart: always
-    #image: mlflow_server
     build:
       context: .
       dockerfile: ./mlflow.Dockerfile
