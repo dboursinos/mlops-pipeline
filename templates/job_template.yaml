@@ -3,6 +3,7 @@ kind: Job
 metadata:
   name: ml-training-job-{C}-{random_state}
 spec:
+  ttlSecondsAfterFinished: 60 # delete job after finished
   template:
     spec:
       containers:
