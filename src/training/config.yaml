@@ -1,0 +1,8 @@
+image: 192.168.1.67:5050/ml_training
+hyperparameters:
+  C: [0.1, 0.5, 1.0]
+  RANDOM_STATE: [42]
+  CV: [5]
+  # Add more hyperparameters here as needed, e.g.:
+  # learning_rate: [0.01, 0.1]
+  # num_epochs: [10, 20]

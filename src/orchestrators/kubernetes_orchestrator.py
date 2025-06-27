@@ -8,10 +8,21 @@ import multiprocessing
 load_dotenv("s3.env")
 load_dotenv("mlflow.env")
 
-# Define hyperparameter ranges
-C_values = [0.1, 0.5, 1.0]
-random_state_values = [42]
-cv_values = [5]
+# Load hyperparameter ranges from config.yaml
+try:
+    with open("./src/training/config.yaml", "r") as f:
+        config = yaml.safe_load(f)
+    hyperparameter_ranges = config.get("hyperparameters", {})
+    image_name = config.get("image")
+    if not image_name:
+        raise ValueError("Image name not found in config.yaml. Please specify 'image'.")
+except FileNotFoundError:
+    print("Error: config.yaml not found. Please create it with hyperparameter definitions.")
+    exit(1)
+except yaml.YAMLError as e:
+    print(f"Error parsing config.yaml: {e}")
+    exit(1)
+
 
 template_file = "./templates/job_template.yaml"
 with open(template_file, "r") as f:
@@ -19,24 +30,53 @@ with open(template_file, "r") as f:
 
 # Function to generate hyperparameter combinations
 def generate_hyperparameter_combinations():
-    return product(C_values, random_state_values, cv_values)
+    keys = hyperparameter_ranges.keys()
+    values = hyperparameter_ranges.values()
 
-def deploy_job(C, random_state, cv):
-    job_name = f"ml-training-job-{C}-{random_state}"
-    job_file = f"ml_training_job_{C}_{random_state}.yaml"
+    all_combinations_values = product(*values)
+
+    # Map each combination of values back to a dictionary with original keys
+    for combination in all_combinations_values:
+        yield dict(zip(keys, combination))
+
+def deploy_job(hyperparams: dict):
+    # Generate a unique name for the job based on hyperparameters
+    # Sort keys for consistent naming and replace '.' for valid Kubernetes name
+    param_parts = [f"{k}-{str(v).replace('.', 'p')}" for k, v in sorted(hyperparams.items())]
+    job_name_suffix = "_".join(param_parts)
+    job_name = f"ml-training-job-{job_name_suffix}"
+    job_file = f"ml_training_job_{job_name_suffix}.yaml"
+
+    # Generate environment variables block for the YAML template
+    env_vars_yaml = []
+    for key, value in hyperparams.items():
+        env_vars_yaml.append(f"        - name: {key}")
+        env_vars_yaml.append(f"          value: \"{value}\"")
+
+    # Add existing environment variables from .env files
+    existing_env_vars = {
+        "MINIO_ENDPOINT": os.environ.get("MINIO_ENDPOINT"),
+        "MINIO_ACCESS_KEY": os.environ.get("MINIO_ACCESS_KEY"),
+        "MINIO_SECRET_KEY": os.environ.get("MINIO_SECRET_KEY"),
+        "MINIO_BUCKET": os.environ.get("MINIO_BUCKET"),
+        "MLFLOW_TRACKING_URI": os.environ.get("MLFLOW_TRACKING_URI"),
+        "MLFLOW_EXPERIMENT_NAME": os.environ.get("MLFLOW_EXPERIMENT_NAME"),
+        "MLFLOW_S3_ENDPOINT_URL": os.environ.get("MLFLOW_S3_ENDPOINT_URL"),
+        "AWS_ACCESS_KEY_ID": os.environ.get("MINIO_ACCESS_KEY"), # For S3 client compatibility
+        "AWS_SECRET_ACCESS_KEY": os.environ.get("MINIO_SECRET_KEY") # For S3 client compatibility
+    }
+    for key, value in existing_env_vars.items():
+        if value is not None:
+            env_vars_yaml.append(f"        - name: {key}")
+            env_vars_yaml.append(f"          value: \"{value}\"")
+
+    dynamic_env_vars_string = "\n".join(env_vars_yaml)
 
     # Create job definition
     job_definition = job_template.format(
-        C=C,
-        random_state=random_state,
-        cv=cv,
-        minio_endpoint=os.environ.get("MINIO_ENDPOINT"),
-        minio_access_key=os.environ.get("MINIO_ACCESS_KEY"),
-        minio_secret_key=os.environ.get("MINIO_SECRET_KEY"),
-        minio_bucket=os.environ.get("MINIO_BUCKET"),
-        mlflow_tracking_uri=os.environ.get("MLFLOW_TRACKING_URI"),
-        mlflow_experiment_name=os.environ.get("MLFLOW_EXPERIMENT_NAME"),
-        mlflow_s3_endpoint_url=os.environ.get("MLFLOW_S3_ENDPOINT_URL")
+        job_name=job_name,
+        image_name=image_name,
+        dynamic_env_vars=dynamic_env_vars_string
     )
 
     with open(job_file, "w") as f:
@@ -50,10 +90,10 @@ def deploy_job(C, random_state, cv):
             capture_output=True,
             text=True
         )
-        print(f"Job {job_name} deployed successfully with C={C} and RANDOM_STATE={random_state}.")
+        print(f"Job {job_name} deployed successfully with hyperparameters: {hyperparams}.")
 
     except subprocess.CalledProcessError as e:
-        print(f"Error deploying job {job_name} with C={C} and RANDOM_STATE={random_state}: {e.stderr}")
+        print(f"Error deploying job {job_name} with hyperparameters {hyperparams}: {e.stderr}")
 
     finally:
         # Clean up job definition file
@@ -64,10 +104,10 @@ if __name__ == '__main__':
     pool = multiprocessing.Pool()
 
     # Generate hyperparameter combinations
-    hyperparameter_combinations = generate_hyperparameter_combinations()
+    hyperparameter_combinations = list(generate_hyperparameter_combinations())
 
     # Deploy jobs in parallel
-    pool.starmap(deploy_job, hyperparameter_combinations)
+    pool.map(deploy_job, hyperparameter_combinations)
 
     # Close the pool and wait for all processes to complete
     pool.close()

@@ -2,40 +2,69 @@ import subprocess
 import os
 from itertools import product
 import multiprocessing
+import yaml
 
-# Define hyperparameters range
-C_values = [0.1, 0.5, 1.0]
-random_state_values = [42, 123]
-cv_values = [5]
+try:
+    with open("./src/training/config.yaml", "r") as f:
+        config = yaml.safe_load(f)
+    hyperparameter_ranges = config.get("hyperparameters", {})
+    image_name = config.get("image")
+    if not image_name:
+        raise ValueError("Image name not found in config.yaml. Please specify 'image'.")
+except FileNotFoundError:
+    print("Error: config.yaml not found. Please create it with hyperparameter and image definitions.")
+    exit(1)
+except yaml.YAMLError as e:
+    print(f"Error parsing config.yaml: {e}")
+    exit(1)
+except ValueError as e:
+    print(f"Configuration Error: {e}")
+    exit(1)
 
-def run_docker_container(C, random_state, cv):
-    env_file = f".env_{C}_{random_state}"
+def generate_hyperparameter_combinations():
+    keys = hyperparameter_ranges.keys()
+    values = hyperparameter_ranges.values()
+
+    all_combinations_values = product(*values)
+
+    for combination_tuple in all_combinations_values:
+        yield dict(zip(keys, combination_tuple))
+
+def run_docker_container(hyperparams: dict):
+    # Generate a unique name for the env file based on hyperparameters
+    # Sort keys for consistent naming and replace '.' for valid file name
+    param_parts = [f"{k}-{str(v).replace('.', 'p')}" for k, v in sorted(hyperparams.items())]
+    env_file_suffix = "_".join(param_parts)
+    env_file = f".env_run_{env_file_suffix}"
+
     with open(env_file, "w") as f:
-        f.write(f"C={C}\n")
-        f.write(f"RANDOM_STATE={random_state}\n")
-        f.write(f"CV={cv}\n")
+        for key, value in hyperparams.items():
+            f.write(f"{key}={value}\n")
 
     try:
+        command = [
+            "docker",
+            "run",
+            "--rm",
+            "--env-file",
+            "s3.env",
+            "--env-file",
+            "mlflow.env",
+            "--env-file",
+            env_file,
+            "--network",
+            "host",
+            image_name,
+        ]
         subprocess.run(
-            [
-                "docker",
-                "run",
-                "--rm",
-                "--env-file",
-                "s3.env",
-                "--env-file",
-                "mlflow.env",
-                "--env-file",
-                env_file,
-                "--network",
-                "host",
-                "ml_training",
-            ],
+            command,
             check=True,
+            capture_output=True,
+            text=True
         )
-        print(f"Docker container ran successfully with C={C} and RANDOM_STATE={random_state}.")
+        print(f"Docker container ran successfully with hyperparameters: {hyperparams}.")
     except subprocess.CalledProcessError as e:
-        print(f"Error running docker container with C={C} and RANDOM_STATE={random_state}: {e}")
+        print(f"Error running docker container with hyperparameters {hyperparams}: {e.stderr}")
         return 1
     finally:
         os.remove(env_file)
@@ -43,13 +72,13 @@ def run_docker_container(C, random_state, cv):
 
 if __name__ == "__main__":
     # Hyperparameter generator
-    hyperparameters = product(C_values, random_state_values, cv_values)
+    hyperparameter_combinations = list(generate_hyperparameter_combinations())
 
     # Create a pool of processes
     pool = multiprocessing.Pool()
 
     # Run docker containers in parallel
-    results = pool.starmap(run_docker_container, hyperparameters)
+    results = pool.map(run_docker_container, hyperparameter_combinations)
 
     # Close the pool and wait for all processes to complete
     pool.close()
