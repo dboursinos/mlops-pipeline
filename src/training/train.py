@@ -13,7 +13,6 @@ MINIO_ENDPOINT = os.environ.get("MINIO_ENDPOINT")
 MINIO_ACCESS_KEY = os.environ.get("MINIO_ACCESS_KEY")
 MINIO_SECRET_KEY = os.environ.get("MINIO_SECRET_KEY")
 MINIO_BUCKET = os.environ.get("MINIO_BUCKET")
-DATA_DIR = "data"  # Directory in MinIO where data is stored
 
 if not all([MINIO_ENDPOINT, MINIO_ACCESS_KEY, MINIO_SECRET_KEY, MINIO_BUCKET]):
     print("Error: Not all MinIO credentials are provided as environment variables.")
@@ -26,8 +25,6 @@ s3_client = boto3.client(
     aws_secret_access_key=MINIO_SECRET_KEY,
 )
 
-random_state = 42
-
 # Define hyperparameters with default values
 C = float(os.environ.get("C", 1.0))  # Regularization strength
 random_state = int(
@@ -35,25 +32,38 @@ random_state = int(
 )  # Random state for reproducibility
 cv = int(os.environ.get("CV", 5))  # Number of cross-validation folds
 
+# Get data file keys from environment variables
+X_TRAIN = os.environ.get("X_TRAIN_KEY", None)
+Y_TRAIN = os.environ.get("Y_TRAIN_KEY", None)
+X_TEST = os.environ.get("X_TEST_KEY", None)
+Y_TEST = os.environ.get("Y_TEST_KEY", None)
 
-def load_data_from_minio(filename):
+if not all([X_TRAIN, Y_TRAIN, X_TEST, Y_TEST]):
+    print("Error: Not all data file keys (X_TRAIN, Y_TRAIN, X_TEST, Y_TEST) are provided as environment variables.")
+    exit(1)
+
+
+def load_data_from_minio(key):
     """Loads data from MinIO."""
-    key = os.path.join(DATA_DIR, filename)
     try:
         response = s3_client.get_object(Bucket=MINIO_BUCKET, Key=key)
         data = pickle.loads(response["Body"].read())
-        print(f"Loaded {filename} from MinIO")
+        print(f"Loaded {key} from MinIO")
         return data
     except Exception as e:
-        print(f"Error loading {filename} from MinIO: {e}")
+        print(f"Error loading {key} from MinIO: {e}")
         return None
 
 
 # Load your data
-X = load_data_from_minio("X_train.pkl")
-y = load_data_from_minio("y_train.pkl")
-X_test = load_data_from_minio("X_test.pkl")
-y_test = load_data_from_minio("y_test.pkl")
+X = load_data_from_minio(X_TRAIN)
+y = load_data_from_minio(Y_TRAIN)
+X_test = load_data_from_minio(X_TEST)
+y_test = load_data_from_minio(Y_TEST)
+
+if X is None or y is None or X_test is None or y_test is None:
+    print("Failed to load all necessary data. Exiting.")
+    exit(1)
 
 # Configure MLflow
 mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI"))

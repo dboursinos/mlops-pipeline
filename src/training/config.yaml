@@ -6,3 +6,8 @@ hyperparameters:
   # Add more hyperparameters here as needed, e.g.:
   # learning_rate: [0.01, 0.1]
   # num_epochs: [10, 20]
+data_files:
+  X_TRAIN: data/X_train.pkl
+  Y_TRAIN: data/y_train.pkl
+  X_TEST: data/X_test.pkl
+  Y_TEST: data/y_test.pkl

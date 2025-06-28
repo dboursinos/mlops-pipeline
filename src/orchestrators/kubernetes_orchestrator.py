@@ -14,6 +14,14 @@ try:
         config = yaml.safe_load(f)
     hyperparameter_ranges = config.get("hyperparameters", {})
     image_name = config.get("image")
+    data_files = config.get("data_files", {})
+
+    if not isinstance(hyperparameter_ranges, dict):
+        raise ValueError("The 'hyperparameters' section in config.yaml must be a dictionary.")
+
+    if not isinstance(data_files, dict):
+        raise ValueError("The 'data_files' section in config.yaml must be a dictionary.")
+
     if not image_name:
         raise ValueError("Image name not found in config.yaml. Please specify 'image'.")
 except FileNotFoundError:
@@ -22,18 +30,39 @@ except FileNotFoundError:
 except yaml.YAMLError as e:
     print(f"Error parsing config.yaml: {e}")
     exit(1)
+except ValueError as e:
+    print(f"Configuration Error: {e}")
+    exit(1)
 
 
 template_file = "./templates/job_template.yaml"
-with open(template_file, "r") as f:
-    job_template = f.read()
+try:
+    with open(template_file, "r") as f:
+        job_template = f.read()
+except FileNotFoundError:
+    print(f"Error: Job template file '{template_file}' not found.")
+    exit(1)
+except Exception as e:
+    print(f"Error reading job template file '{template_file}': {e}")
+    exit(1)
 
 # Function to generate hyperparameter combinations
 def generate_hyperparameter_combinations():
     keys = hyperparameter_ranges.keys()
     values = hyperparameter_ranges.values()
 
-    all_combinations_values = product(*values)
+    # Process values to ensure they are always iterables (e.g., lists),
+    # even if a hyperparameter is defined as a single scalar.
+    # This prevents 'itertools.product' from iterating over characters of a string.
+    processed_values = []
+    for v in values:
+        if isinstance(v, (list, tuple)):
+            processed_values.append(v)
+        else:
+            # Wrap scalar values in a list to treat them as a single option
+            processed_values.append([v])
+
+    all_combinations_values = product(*processed_values)
 
     # Map each combination of values back to a dictionary with original keys
     for combination in all_combinations_values:
@@ -42,6 +71,7 @@ def generate_hyperparameter_combinations():
 def deploy_job(hyperparams: dict):
     # Generate a unique name for the job based on hyperparameters
     # Sort keys for consistent naming and replace '.' for valid Kubernetes name
+    # Convert keys to lowercase AND replace underscores with hyphens for Kubernetes compliance
     param_parts = [f"{k.lower().replace('_', '-')}-{str(v).replace('.', 'p')}" for k, v in sorted(hyperparams.items())]
     job_name_suffix = "-".join(param_parts)
     job_name = f"ml-training-job-{job_name_suffix}"
@@ -50,8 +80,14 @@ def deploy_job(hyperparams: dict):
     # Generate environment variables block for the YAML template
     env_vars_yaml = []
     for key, value in hyperparams.items():
-        env_vars_yaml.append(f"        - name: {key}")
-        env_vars_yaml.append(f"          value: \"{value}\"")
+        if value is not None:
+            env_vars_yaml.append(f"        - name: {key}")
+            env_vars_yaml.append(f"          value: \"{value}\"")
+
+    for key, value in data_files.items():
+        if value is not None:
+            env_vars_yaml.append(f"        - name: {key}")
+            env_vars_yaml.append(f"          value: \"{value}\"")
 
     # Add existing environment variables from .env files
     existing_env_vars = {
