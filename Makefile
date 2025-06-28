@@ -34,11 +34,6 @@ build-train-pytorch:
 
 build-train-all: build-train-random-forest build-train-svm build-train-logistic-regression build-train-xgboost build-train-pytorch
 
-build-train:
-	docker build . -f ./docker/train.Dockerfile -t ml_training
-	docker tag ml_training 192.168.1.67:5050/ml-training
-	docker push 192.168.1.67:5050/ml-training
-
 build-prod:
 	docker build . -f ./docker/prod.Dockerfile -t ml_production
 	docker tag ml_production 192.168.1.67:5050/ml-production

@@ -77,18 +77,16 @@ mlflow.set_experiment(os.environ.get("MLFLOW_EXPERIMENT_NAME"))
 
 # Start MLflow run
 with mlflow.start_run():
-    # Log hyperparameters
+    mlflow.log_param("model_type", "LogisticRegression")
     mlflow.log_param("C", C)
     mlflow.log_param("random_state", random_state)
     mlflow.log_param("cv", cv)
 
-    # Initialize StratifiedKFold for cross-validation
     skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=random_state)
 
     accuracy_scores = []
     f1_scores = []
 
-    # Perform cross-validation
     for fold, (train_index, val_index) in enumerate(skf.split(X, y)):
         X_train, X_val = X[train_index], X[val_index]
         y_train, y_val = y[train_index], y[val_index]

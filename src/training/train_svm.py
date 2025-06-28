@@ -5,7 +5,7 @@ import boto3
 from dotenv import load_dotenv
 import pickle
 import numpy as np
-from sklearn.svm import SVC # NEW: Import SVC
+from sklearn.svm import SVC
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import accuracy_score, f1_score
 
@@ -75,7 +75,7 @@ mlflow.set_experiment(os.environ.get("MLFLOW_EXPERIMENT_NAME"))
 
 # --- Main Training Logic ---
 with mlflow.start_run():
-    mlflow.log_param("model_type", "SVC") # Log the specific model type
+    mlflow.log_param("model_type", "SVM") # Log the specific model type
     mlflow.log_param("random_state", common_random_state)
     mlflow.log_param("cv", common_cv)
 
