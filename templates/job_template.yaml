@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: ml-training-job-{C}-{random_state}
+  name: {job_name}
 spec:
   ttlSecondsAfterFinished: 60 # delete job after finished
   template:

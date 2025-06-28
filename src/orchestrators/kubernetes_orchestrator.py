@@ -42,8 +42,8 @@ def generate_hyperparameter_combinations():
 def deploy_job(hyperparams: dict):
     # Generate a unique name for the job based on hyperparameters
     # Sort keys for consistent naming and replace '.' for valid Kubernetes name
-    param_parts = [f"{k}-{str(v).replace('.', 'p')}" for k, v in sorted(hyperparams.items())]
-    job_name_suffix = "_".join(param_parts)
+    param_parts = [f"{k.lower().replace('_', '-')}-{str(v).replace('.', 'p')}" for k, v in sorted(hyperparams.items())]
+    job_name_suffix = "-".join(param_parts)
     job_name = f"ml-training-job-{job_name_suffix}"
     job_file = f"ml_training_job_{job_name_suffix}.yaml"
 
