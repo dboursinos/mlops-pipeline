@@ -1,0 +1,9 @@
+xgboost
+scikit-learn==1.6.1
+numpy==2.2.6
+scipy
+pandas==2.2.3
+boto3
+dotenv
+pyyaml
+mlflow==2.22.0

@@ -1,6 +1,7 @@
 scikit-learn==1.6.1
-mlflow==2.22.0
-pandas==2.2.3
 numpy==2.2.6
+pandas==2.2.3
 boto3
 dotenv
+pyyaml
+mlflow==2.22.0

@@ -12,6 +12,28 @@ mlflow-remove:
 compose-logs:
 	docker compose -f ./docker/$(DOCKER_COMPOSE_FILE) logs
 
+build-train-random-forest:
+	docker build . -f ./docker/random_forest.Dockerfile -t 192.168.1.67:5050/ml_training_random_forest:latest
+	docker push 192.168.1.67:5050/ml_training_random_forest:latest
+
+build-train-svm:
+	docker build . -f ./docker/svm.Dockerfile -t 192.168.1.67:5050/ml_training_svm:latest
+	docker push 192.168.1.67:5050/ml_training_svm:latest
+
+build-train-logistic-regression:
+	docker build . -f ./docker/logistic_regression.Dockerfile -t 192.168.1.67:5050/ml_training_logistic_regression:latest
+	docker push 192.168.1.67:5050/ml_training_logistic_regression:latest
+
+build-train-xgboost:
+	docker build . -f ./docker/xgboost.Dockerfile -t 192.168.1.67:5050/ml_training_xgboost:latest
+	docker push 192.168.1.67:5050/ml_training_xgboost:latest
+
+build-train-pytorch:
+	docker build . -f ./docker/pytorch.Dockerfile -t 192.168.1.67:5050/ml_training_pytorch_mlp:latest
+	docker push 192.168.1.67:5050/ml_training_pytorch_mlp:latest
+
+build-train-all: build-train-random-forest build-train-svm build-train-logistic-regression build-train-xgboost build-train-pytorch
+
 build-train:
 	docker build . -f ./docker/train.Dockerfile -t ml_training
 	docker tag ml_training 192.168.1.67:5050/ml-training
@@ -22,7 +44,7 @@ build-prod:
 	docker tag ml_production 192.168.1.67:5050/ml-production
 	docker push 192.168.1.67:5050/ml-production
 
-train-kubernetes: build-train
+train-kubernetes:
 	uv run python ./src/orchestrators/kubernetes_orchestrator.py
 
 train-docker: build-train
