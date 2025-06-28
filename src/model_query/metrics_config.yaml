@@ -11,7 +11,7 @@ parameters_to_include:
   #- {name: learning_rate, type: float}
   #- {name: batch_size, type: int}
   #- {name: model_type, type: str}
-#parameter_filters:
+parameter_filters:
   #numeric_ranges:
     #C:
       #min: 0.2
@@ -21,9 +21,9 @@ parameters_to_include:
       #max: 0.01
     #batch_size:
       #min: 32
-  #categorical:
-    #model_type:
-      #values: ["resnet50", "vit-base"]
+  categorical:
+    model_type:
+      values: ["PyTorchMLP", "RandomForestClassifier"]
       # mode: "include" or "exclude" (default: include)
 experiment_filter:
   include:
