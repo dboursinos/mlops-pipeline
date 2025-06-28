@@ -1,9 +1,8 @@
 from sqlalchemy import create_engine, MetaData, Table, select, desc, asc, and_, or_, between, cast, Float, Integer, String
 import yaml
 import pandas as pd
-from collections import defaultdict
 from tabulate import tabulate
-from typing import Dict, Any, List, Union
+from typing import Dict, Any
 from dotenv import load_dotenv
 import os
 import matplotlib
@@ -84,14 +83,14 @@ def build_parameter_filters(params_table, config):
 
     # Process categorical filters if section exists and has content
     categorical_filters = param_filters.get('categorical')
-    if isinstance(categorical_filters, dict):  # Explicit type check
+    if isinstance(categorical_filters, dict):
         for param, settings in categorical_filters.items():
             # Skip if settings is None or not a dict
             if not isinstance(settings, dict):
                 continue
 
             values = settings.get('values')
-            if isinstance(values, (list, tuple)):  # Proper iterable check
+            if isinstance(values, (list, tuple)):
                 mode = settings.get('mode', 'include')
                 conditions.append(
                     and_(
