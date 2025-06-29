@@ -5,7 +5,7 @@ data_files:
   Y_TEST_KEY: data/y_test.pkl
 kubernetes_config:
   namespace: ml-training
-  max_concurrent_jobs: 10
+  max_concurrent_jobs: 14
   poll_interval_seconds: 15
 models:
   - name: LogisticRegression
@@ -23,19 +23,19 @@ models:
       MIN_SAMPLES_LEAF: [1, 2]
       RANDOM_STATE: [42]
       CV: [5]
-  - name: XGBoostClassifier
-    image: 192.168.1.67:5050/ml_training_xgboost:latest
-    hyperparameters:
-      N_ESTIMATORS: [50, 100]
-      LEARNING_RATE: [0.01, 0.1]
-      MAX_DEPTH: [3, 6]
-      SUBSAMPLE: [0.8, 1.0]
-      COLSAMPLE_BYTREE: [0.8, 1.0]
-      GAMMA: [0, 0.1]
-      REG_ALPHA: [0, 0.1] # L1 regularization
-      REG_LAMBDA: [1, 0.1] # L2 regularization
-      RANDOM_STATE: [42]
-      CV: [5]
+  #- name: XGBoostClassifier
+    #image: 192.168.1.67:5050/ml_training_xgboost:latest
+    #hyperparameters:
+      #N_ESTIMATORS: [50, 100]
+      #LEARNING_RATE: [0.01, 0.1]
+      #MAX_DEPTH: [3, 6]
+      #SUBSAMPLE: [0.8, 1.0]
+      #COLSAMPLE_BYTREE: [0.8, 1.0]
+      #GAMMA: [0, 0.1]
+      #REG_ALPHA: [0, 0.1] # L1 regularization
+      #REG_LAMBDA: [1, 0.1] # L2 regularization
+      #RANDOM_STATE: [42]
+      #CV: [5]
   - name: SVM
     image: 192.168.1.67:5050/ml_training_svm:latest
     hyperparameters:
