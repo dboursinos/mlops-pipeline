@@ -14,43 +14,43 @@ models:
       C: [0.1, 1.0, 10.0]
       RANDOM_STATE: [42]
       CV: [5]
-  #- name: RandomForestClassifier
-    #image: 192.168.1.67:5050/ml_training_random_forest:latest
-    #hyperparameters:
-      #N_ESTIMATORS: [50, 100, 200]
-      #MAX_DEPTH: [5, 10, None] # Use 'None' string for no limit
-      #MIN_SAMPLES_SPLIT: [2, 5]
-      #MIN_SAMPLES_LEAF: [1, 2]
-      #RANDOM_STATE: [42]
-      #CV: [5]
-  #- name: XGBoostClassifier
-    #image: 192.168.1.67:5050/ml_training_xgboost:latest
-    #hyperparameters:
-      #N_ESTIMATORS: [50, 100]
-      #LEARNING_RATE: [0.01, 0.1]
-      #MAX_DEPTH: [3, 6]
-      #SUBSAMPLE: [0.8, 1.0]
-      #COLSAMPLE_BYTREE: [0.8, 1.0]
-      #GAMMA: [0, 0.1]
-      #REG_ALPHA: [0, 0.1] # L1 regularization
-      #REG_LAMBDA: [1, 0.1] # L2 regularization
-      #RANDOM_STATE: [42]
-      #CV: [5]
-  #- name: SVM
-    #image: 192.168.1.67:5050/ml_training_svm:latest
-    #hyperparameters:
-      #C: [0.1, 1.0, 10.0]
-      #KERNEL: ["rbf", "linear"] # For 'poly' also add 'DEGREE' hp
-      #GAMMA: ["scale", "auto", 0.01] # 'scale' or 'auto' string, or float
-      #DEGREE: [3] # Only used if KERNEL is 'poly'
-      #RANDOM_STATE: [42]
-      #CV: [5]
-  #- name: PyTorchMLP
-    #image: 192.168.1.67:5050/ml_training_pytorch_mlp:latest
-    #hyperparameters:
-      #NUM_EPOCHS: [10, 20]
-      #LEARNING_RATE: [0.001, 0.01]
-      #BATCH_SIZE: [32, 64]
-      #HIDDEN_LAYER_SIZES: ["64", "64,32"] # Pass as string
-      #RANDOM_STATE: [42]
-      #CV: [5]
+  - name: RandomForestClassifier
+    image: 192.168.1.67:5050/ml_training_random_forest:latest
+    hyperparameters:
+      N_ESTIMATORS: [50, 100, 200]
+      MAX_DEPTH: [5, 10, None] # Use 'None' string for no limit
+      MIN_SAMPLES_SPLIT: [2, 5]
+      MIN_SAMPLES_LEAF: [1, 2]
+      RANDOM_STATE: [42]
+      CV: [5]
+  - name: XGBoostClassifier
+    image: 192.168.1.67:5050/ml_training_xgboost:latest
+    hyperparameters:
+      N_ESTIMATORS: [50, 100]
+      LEARNING_RATE: [0.01, 0.1]
+      MAX_DEPTH: [3, 6]
+      SUBSAMPLE: [0.8, 1.0]
+      COLSAMPLE_BYTREE: [0.8, 1.0]
+      GAMMA: [0, 0.1]
+      REG_ALPHA: [0, 0.1] # L1 regularization
+      REG_LAMBDA: [1, 0.1] # L2 regularization
+      RANDOM_STATE: [42]
+      CV: [5]
+  - name: SVM
+    image: 192.168.1.67:5050/ml_training_svm:latest
+    hyperparameters:
+      C: [0.1, 1.0, 10.0]
+      KERNEL: ["rbf", "linear"] # For 'poly' also add 'DEGREE' hp
+      GAMMA: ["scale", "auto", 0.01] # 'scale' or 'auto' string, or float
+      DEGREE: [3] # Only used if KERNEL is 'poly'
+      RANDOM_STATE: [42]
+      CV: [5]
+  - name: PyTorchMLP
+    image: 192.168.1.67:5050/ml_training_pytorch_mlp:latest
+    hyperparameters:
+      NUM_EPOCHS: [10, 20]
+      LEARNING_RATE: [0.001, 0.01]
+      BATCH_SIZE: [32, 64]
+      HIDDEN_LAYER_SIZES: ["64", "64,32"] # Pass as string
+      RANDOM_STATE: [42]
+      CV: [5]

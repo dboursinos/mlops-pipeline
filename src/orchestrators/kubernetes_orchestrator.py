@@ -8,6 +8,7 @@ import hashlib
 import time
 from collections import deque
 import json
+from tqdm import tqdm
 
 load_dotenv("s3.env")
 load_dotenv("mlflow.env")
@@ -115,13 +116,13 @@ def _get_active_kubernetes_jobs(namespace: str, label_selector: str) -> int:
                 active_count += 1
         return active_count
     except subprocess.CalledProcessError as e:
-        print(f"Error executing kubectl command: {e.stderr}")
+        tqdm.write(f"Error executing kubectl command: {e.stderr}")
         return 0 # Return 0 active jobs on error
     except json.JSONDecodeError as e:
-        print(f"Error parsing kubectl JSON output: {e}")
+        tqdm.write(f"Error parsing kubectl JSON output: {e}")
         return 0
     except Exception as e:
-        print(f"Unexpected error fetching Kubernetes jobs: {e}")
+        tqdm.write(f"Unexpected error fetching Kubernetes jobs: {e}")
         return 0
 
 def deploy_job(job_params: dict):
@@ -129,7 +130,7 @@ def deploy_job(job_params: dict):
     image_name_for_job = job_params.get("DOCKER_IMAGE")
 
     if not image_name_for_job:
-        print(f"Error: No Docker image specified for model type {model_type}. Skipping deployment.")
+        tqdm.write(f"Error: No Docker image specified for model type {model_type}. Skipping deployment.")
         return
 
     params_for_naming = {k: v for k, v in job_params.items() if k not in ["MODEL_TYPE", "DOCKER_IMAGE"]}
@@ -150,13 +151,13 @@ def deploy_job(job_params: dict):
         short_hash = hashlib.sha1(job_name_suffix.encode()).hexdigest()[:8]
         # Construct a shorter name: prefix-model-hash
         job_name = f"ml-{model_type.lower().replace('_', '-')}-{short_hash}"
-        print(f"Warning: Original job name '{full_job_name}' was too long. Truncated to '{job_name}'")
+        # tqdm.write(f"Warning: Original job name '{full_job_name}' was too long. Truncated to '{job_name}'")
     else:
         job_name = full_job_name
 
     job_file = f"ml_training_job_{job_name}.yaml"
 
-    print(f"Attempting to deploy job: {job_name} with model {model_type}")
+    # tqdm.write(f"Attempting to deploy job: {job_name} with model {model_type}")
 
     # Generate environment variables block for the YAML template
     env_vars_yaml = []
@@ -210,10 +211,10 @@ def deploy_job(job_params: dict):
             capture_output=True,
             text=True
         )
-        print(f"Job {job_name} deployed successfully with model {model_type} and hyperparameters: {job_params}.")
+        # tqdm.write(f"Job {job_name} deployed successfully with model {model_type} and hyperparameters: {job_params}.")
 
     except subprocess.CalledProcessError as e:
-        print(f"Error deploying job {job_name} with model {model_type} and hyperparameters {job_params}: {e.stderr}")
+        tqdm.write(f"Error deploying job {job_name} with model {model_type} and hyperparameters {job_params}: {e.stderr}")
 
     finally:
         os.remove(job_file)
@@ -221,31 +222,37 @@ def deploy_job(job_params: dict):
 if __name__ == '__main__':
     all_job_combinations = generate_all_combinations()
     pending_jobs = deque(all_job_combinations)
-    print(f"Total jobs to schedule: {len(pending_jobs)}")
+
+    total_jobs_to_schedule = len(pending_jobs)
+
+    print(f"Total jobs to schedule: {total_jobs_to_schedule}")
     print(f"Maximum concurrent jobs: {MAX_CONCURRENT_JOBS}")
     print(f"Kubernetes Namespace: {K8S_NAMESPACE}")
     print(f"Polling interval: {POLLING_INTERVAL_SECONDS} seconds")
 
-    total_deployed = 0
-    while pending_jobs or _get_active_kubernetes_jobs(K8S_NAMESPACE, 'app=ml-training-job') > 0:
+    # Initialize tqdm progress bar
+    # desc: description, total: total iterations, unit: unit name, dynamic_ncols: adjust width
+    # leave=True: keep bar on screen after completion
+    with tqdm(total=total_jobs_to_schedule, desc="Scheduling Jobs", unit="job", dynamic_ncols=True, leave=True) as pbar:
+        # Initial active jobs check for the loop condition
         active_jobs = _get_active_kubernetes_jobs(K8S_NAMESPACE, 'app=ml-training-job')
 
-        print(f"\n--- Current Status ---")
-        print(f"Active jobs: {active_jobs}/{MAX_CONCURRENT_JOBS}")
-        print(f"Pending jobs in queue: {len(pending_jobs)}")
-        print(f"Total jobs deployed so far: {total_deployed}")
+        while pending_jobs or active_jobs > 0:
+            active_jobs = _get_active_kubernetes_jobs(K8S_NAMESPACE, 'app=ml-training-job')
 
-        if active_jobs < MAX_CONCURRENT_JOBS and pending_jobs:
-            job_to_deploy = pending_jobs.popleft()
-            deploy_job(job_to_deploy)
-            total_deployed += 1
-            time.sleep(1)
-        else:
-            if not pending_jobs and active_jobs == 0:
-                print("All jobs processed and no active jobs remaining. Exiting scheduler.")
-                break
+            pbar.set_description(f"Scheduling Jobs (Active: {active_jobs}/{MAX_CONCURRENT_JOBS}, Pending: {len(pending_jobs)})")
 
-            print(f"Waiting for {POLLING_INTERVAL_SECONDS} seconds before re-checking job status...")
-            time.sleep(POLLING_INTERVAL_SECONDS)
+            if active_jobs < MAX_CONCURRENT_JOBS and pending_jobs:
+                job_to_deploy = pending_jobs.popleft()
+                deploy_job(job_to_deploy)
+                pbar.update(1)
+                time.sleep(1)
+            else:
+                if not pending_jobs and active_jobs == 0:
+                    pbar.set_description("All jobs completed.")
+                    break # All jobs processed and no active jobs remaining
 
-    print("\nAll hyperparameter combinations processed and jobs managed.")
+                tqdm.write(f"Max concurrent jobs reached or no jobs to deploy. Waiting for {POLLING_INTERVAL_SECONDS} seconds...") # Use tqdm.write
+                time.sleep(POLLING_INTERVAL_SECONDS)
+
+    tqdm.write("\nAll hyperparameter combinations processed and jobs managed.")
