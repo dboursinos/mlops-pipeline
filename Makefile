@@ -40,7 +40,7 @@ build-prod:
 	docker push 192.168.1.67:5050/ml-production
 
 train-kubernetes:
-	uv run python ./src/orchestrators/kubernetes_orchestrator.py
+	@uv run python ./src/orchestrators/kubernetes_orchestrator.py
 
 train-docker: build-train
 	uv run python ./src/orchestrators/docker_orchestrator.py

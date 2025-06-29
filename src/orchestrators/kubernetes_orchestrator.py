@@ -230,10 +230,18 @@ if __name__ == '__main__':
     print(f"Kubernetes Namespace: {K8S_NAMESPACE}")
     print(f"Polling interval: {POLLING_INTERVAL_SECONDS} seconds")
 
+    # Initialize tqdm progress bar with custom format to remove incorrect estimated remaining time
+    # {desc}: description (from set_description)
+    # {percentage:.0f}%: current percentage without decimals
+    # {bar}: the actual progress bar graphic
+    # {n_fmt}/{total_fmt}: current count / total count
+    # {unit}: the unit, e.g., "job"
+    custom_bar_format = "{desc}: {percentage:.0f}%|{bar}| {n_fmt}/{total_fmt} {unit}"
+
     # Initialize tqdm progress bar
     # desc: description, total: total iterations, unit: unit name, dynamic_ncols: adjust width
     # leave=True: keep bar on screen after completion
-    with tqdm(total=total_jobs_to_schedule, desc="Scheduling Jobs", unit="job", dynamic_ncols=True, leave=True) as pbar:
+    with tqdm(total=total_jobs_to_schedule, desc="Scheduling Jobs", unit="jobs", dynamic_ncols=True, leave=True, bar_format=custom_bar_format) as pbar:
         # Initial active jobs check for the loop condition
         active_jobs = _get_active_kubernetes_jobs(K8S_NAMESPACE, 'app=ml-training-job')
 

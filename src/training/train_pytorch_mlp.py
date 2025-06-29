@@ -161,7 +161,7 @@ with mlflow.start_run():
                 running_loss += loss.item() * inputs.size(0)
 
             epoch_loss = running_loss / len(train_dataset)
-            mlflow.log_metric(f"train_loss_fold_{fold}_epoch_{epoch}", epoch_loss)
+            mlflow.log_metric(f"train_loss_fold_{fold}", epoch_loss, step=epoch)
 
         # Evaluate model on validation set for the current fold
         model.eval() # Set model to evaluation mode
