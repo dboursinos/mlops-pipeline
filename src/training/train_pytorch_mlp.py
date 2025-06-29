@@ -195,7 +195,7 @@ with mlflow.start_run():
     full_train_dataset = TensorDataset(X_full_tensor, y_full_tensor)
     full_train_loader = DataLoader(full_train_dataset, batch_size=batch_size, shuffle=True)
 
-    for epoch in range(num_epochs): # Train final model for the same number of epochs
+    for epoch in range(num_epochs):
         final_model.train()
         for inputs, labels in full_train_loader:
             final_optimizer.zero_grad()

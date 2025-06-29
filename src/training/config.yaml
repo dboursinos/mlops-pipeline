@@ -3,6 +3,10 @@ data_files:
   Y_TRAIN_KEY: data/y_train.pkl
   X_TEST_KEY: data/X_test.pkl
   Y_TEST_KEY: data/y_test.pkl
+kubernetes_config:
+  namespace: ml-training
+  max_concurrent_jobs: 10
+  poll_interval_seconds: 15
 models:
   - name: LogisticRegression
     image: 192.168.1.67:5050/ml_training_logistic_regression:latest

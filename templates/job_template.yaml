@@ -2,6 +2,8 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: {job_name}
+  labels:
+    app: ml-training-job
 spec:
   ttlSecondsAfterFinished: 60 # delete job after finished
   template:

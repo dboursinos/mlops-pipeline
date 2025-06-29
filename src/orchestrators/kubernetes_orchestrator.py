@@ -5,11 +5,13 @@ from itertools import product
 from dotenv import load_dotenv
 import multiprocessing
 import hashlib
+import time
+from collections import deque
+import json
 
 load_dotenv("s3.env")
 load_dotenv("mlflow.env")
 
-# Load hyperparameter ranges from config.yaml
 try:
     with open("./src/training/config.yaml", "r") as f:
         config = yaml.safe_load(f)
@@ -19,14 +21,19 @@ try:
 
     data_files = config.get("data_files", {})
     models_config = config.get("models", [])
+    kubernetes_config = config.get("kubernetes_config", {})
 
     if not isinstance(data_files, dict):
         raise ValueError("The 'data_files' section in config.yaml must be a dictionary.")
-
     if not isinstance(models_config, list):
         raise ValueError("The 'models' section in config.yaml must be a list of model definitions.")
     if not models_config:
         raise ValueError("No models defined in config.yaml under 'models' section.")
+    if not isinstance(kubernetes_config, dict):
+        raise ValueError("The 'kubernetes_config' section in config.yaml must be a dictionary.")
+    K8S_NAMESPACE = kubernetes_config.get("namespace", "default")
+    MAX_CONCURRENT_JOBS = kubernetes_config.get("max_concurrent_jobs", 3)
+    POLLING_INTERVAL_SECONDS = kubernetes_config.get("polling_interval_seconds", 15)
 
 except FileNotFoundError:
     print("Error: config.yaml not found. Please create it with model and hyperparameter definitions.")
@@ -76,16 +83,46 @@ def generate_all_combinations():
             if isinstance(v, (list, tuple)):
                 processed_values.append(v)
             else:
-                # Wrap scalar values in a list to treat them as a single option
                 processed_values.append([v])
 
         # Generate combinations for the current model
         for combo_values in product(*processed_values):
             combo_dict = dict(zip(keys, combo_values))
             combo_dict["MODEL_TYPE"] = model_name
-            combo_dict["DOCKER_IMAGE"] = model_image # NEW: Add image to the combination
+            combo_dict["DOCKER_IMAGE"] = model_image
             all_model_combinations.append(combo_dict)
     return all_model_combinations
+
+def _get_active_kubernetes_jobs(namespace: str, label_selector: str) -> int:
+    """
+    Returns the count of active Kubernetes Jobs matching the label selector using kubectl.
+    """
+    try:
+        cmd = [
+            "kubectl", "get", "jobs",
+            "-n", namespace,
+            "-l", label_selector,
+            "-o", "json"
+        ]
+        result = subprocess.run(cmd, check=True, capture_output=True, text=True)
+        jobs_json = json.loads(result.stdout)
+
+        active_count = 0
+        for job in jobs_json.get("items", []):
+            status = job.get("status", {})
+            # A job is considered active if its 'active' count in status is greater than 0
+            if status.get("active", 0) > 0:
+                active_count += 1
+        return active_count
+    except subprocess.CalledProcessError as e:
+        print(f"Error executing kubectl command: {e.stderr}")
+        return 0 # Return 0 active jobs on error
+    except json.JSONDecodeError as e:
+        print(f"Error parsing kubectl JSON output: {e}")
+        return 0
+    except Exception as e:
+        print(f"Unexpected error fetching Kubernetes jobs: {e}")
+        return 0
 
 def deploy_job(job_params: dict):
     model_type = job_params.get("MODEL_TYPE", "unknown-model")
@@ -117,9 +154,9 @@ def deploy_job(job_params: dict):
     else:
         job_name = full_job_name
 
-    job_file = f"ml_training_job_{job_name}.yaml" # Use the potentially truncated job_name for file
+    job_file = f"ml_training_job_{job_name}.yaml"
 
-    print(f"Generated job name for deployment: {job_name}")
+    print(f"Attempting to deploy job: {job_name} with model {model_type}")
 
     # Generate environment variables block for the YAML template
     env_vars_yaml = []
@@ -168,7 +205,7 @@ def deploy_job(job_params: dict):
 
     try:
         subprocess.run(
-            ["kubectl", "apply", "-f", job_file, "-n", "ml-training"],
+            ["kubectl", "apply", "-f", job_file, "-n", K8S_NAMESPACE],
             check=True,
             capture_output=True,
             text=True
@@ -182,9 +219,33 @@ def deploy_job(job_params: dict):
         os.remove(job_file)
 
 if __name__ == '__main__':
-    pool = multiprocessing.Pool()
-    hyperparameter_combinations = generate_all_combinations()
-    pool.map(deploy_job, hyperparameter_combinations)
-    pool.close()
-    pool.join()
-    print("All hyperparameter combinations processed for all models.")
+    all_job_combinations = generate_all_combinations()
+    pending_jobs = deque(all_job_combinations)
+    print(f"Total jobs to schedule: {len(pending_jobs)}")
+    print(f"Maximum concurrent jobs: {MAX_CONCURRENT_JOBS}")
+    print(f"Kubernetes Namespace: {K8S_NAMESPACE}")
+    print(f"Polling interval: {POLLING_INTERVAL_SECONDS} seconds")
+
+    total_deployed = 0
+    while pending_jobs or _get_active_kubernetes_jobs(K8S_NAMESPACE, 'app=ml-training-job') > 0:
+        active_jobs = _get_active_kubernetes_jobs(K8S_NAMESPACE, 'app=ml-training-job')
+
+        print(f"\n--- Current Status ---")
+        print(f"Active jobs: {active_jobs}/{MAX_CONCURRENT_JOBS}")
+        print(f"Pending jobs in queue: {len(pending_jobs)}")
+        print(f"Total jobs deployed so far: {total_deployed}")
+
+        if active_jobs < MAX_CONCURRENT_JOBS and pending_jobs:
+            job_to_deploy = pending_jobs.popleft()
+            deploy_job(job_to_deploy)
+            total_deployed += 1
+            time.sleep(1)
+        else:
+            if not pending_jobs and active_jobs == 0:
+                print("All jobs processed and no active jobs remaining. Exiting scheduler.")
+                break
+
+            print(f"Waiting for {POLLING_INTERVAL_SECONDS} seconds before re-checking job status...")
+            time.sleep(POLLING_INTERVAL_SECONDS)
+
+    print("\nAll hyperparameter combinations processed and jobs managed.")
