@@ -2,7 +2,8 @@ FROM python:3.13.4-slim
 
 WORKDIR /app
 
-RUN pip install mlflow==2.22.0 scikit-learn==1.6.1 boto3==1.26.131
+RUN pip install mlflow==2.22.0 scikit-learn==1.6.1 boto3==1.26.131 xgboost==3.0.2 \
+  && pip install --no-cache-dir torch==2.7.1+cpu -f https://download.pytorch.org/whl/torch
 
 EXPOSE 5001
 

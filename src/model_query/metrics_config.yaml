@@ -23,7 +23,7 @@ parameter_filters:
       #min: 32
   categorical:
     model_type:
-      values: ["PyTorchMLP", "RandomForestClassifier"]
+      values: ["PyTorchMLP", "RandomForestClassifier", "XGBoostClassifier"] # LogisticRegression, SVM, RandomForestClassifier, XGBoostClassifier, PyTorchMLP
       # mode: "include" or "exclude" (default: include)
 experiment_filter:
   include:
