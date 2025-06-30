@@ -19,7 +19,7 @@ payload = {
 }
 
 # Send the request to the API
-api_url = "http://192.168.1.126/invocations"
+api_url = "http://192.168.1.125/invocations"
 headers = {"Content-Type": "application/json"}
 
 try:

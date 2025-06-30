@@ -46,6 +46,17 @@ except ValueError as e:
     print(f"Configuration Error: {e}")
     exit(1)
 
+try:
+    subprocess.run(
+        ["kubectl", "create", "namespace", K8S_NAMESPACE],
+        check=False,  # Don't raise an error if the namespace already exists
+        capture_output=True,
+        text=True,
+    )
+    print(f"Namespace {K8S_NAMESPACE} created (if it didn't exist).")
+except subprocess.CalledProcessError as e:
+    print(f"Error creating namespace: {e.stderr}")
+
 
 template_file = "./templates/job_template.yaml"
 try:
@@ -68,7 +79,7 @@ def generate_all_combinations():
 
         if not model_name:
             raise ValueError("Each model in 'models' list must have a 'name'.")
-        if not model_image: # NEW: Validate image is present
+        if not model_image:
             raise ValueError(f"Model '{model_name}' must have an 'image' defined.")
         if not isinstance(model_hyperparameters, dict):
             raise ValueError(f"Hyperparameters for model '{model_name}' must be a dictionary.")

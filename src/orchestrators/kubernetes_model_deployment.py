@@ -44,7 +44,6 @@ def deploy_model():
     with open(service_file, "w") as f:
         f.write(service_definition)
 
-    # Deploy to Kubernetes
     try:
         subprocess.run(
             ["kubectl", "create", "namespace", "ml-prod"],

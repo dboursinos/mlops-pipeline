@@ -43,19 +43,19 @@ train-kubernetes:
 	@uv run python ./src/orchestrators/kubernetes_orchestrator.py
 
 train-docker: build-train
-	uv run python ./src/orchestrators/docker_orchestrator.py
+	@uv run python ./src/orchestrators/docker_orchestrator.py
 
 prod-kubernetes: build-prod
-	uv run python ./src/orchestrators/kubernetes_model_deployment.py
+	@uv run python ./src/orchestrators/kubernetes_model_deployment.py
 
 prod-docker: build-prod
-	uv run python ./src/orchestrators/docker_model_deployment.py
+	@uv run python ./src/orchestrators/docker_model_deployment.py
 
 inference-one-input:
-	uv run python ./src/inference_api/inference_test.py
+	@uv run python ./src/inference_api/inference_test.py
 
 select-model:
-	uv run python ./src/model_query/model_tracker.py
+	@uv run python ./src/model_query/model_tracker.py
 
 generate-data:
-	uv run python ./src/data_gen/data_gen.py
+	@uv run python ./src/data_gen/data_gen.py
