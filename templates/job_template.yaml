@@ -13,6 +13,6 @@ spec:
         image: {image_name}
         env:
 {dynamic_env_vars}
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
       restartPolicy: Never
   backoffLimit: 4

@@ -274,4 +274,4 @@ if __name__ == '__main__':
                 # tqdm.write(f"Max concurrent jobs reached or no jobs to deploy. Waiting for {POLLING_INTERVAL_SECONDS} seconds...")
                 time.sleep(POLLING_INTERVAL_SECONDS)
 
-    tqdm.write("\nAll hyperparameter combinations processed and jobs managed.")
+    tqdm.write("\nAll training jobs completed.")
