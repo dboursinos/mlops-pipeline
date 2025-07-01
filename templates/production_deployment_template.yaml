@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: mlflow-model-deployment
 spec:
-  replicas: 1
+  replicas: {replicas}
   selector:
     matchLabels:
       app: mlflow-model

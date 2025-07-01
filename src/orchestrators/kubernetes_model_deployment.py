@@ -1,13 +1,32 @@
 import subprocess
 import os
 from dotenv import load_dotenv
+import yaml
 
 load_dotenv("s3.env")
 load_dotenv("mlflow.env")
-load_dotenv("prod.env")
+
+def load_deployment_config(config_path: str = "./src/config/model_deployment_config.yaml"):
+    """Loads model deployment configuration from a YAML file."""
+    try:
+        with open(config_path, 'r') as f:
+            return yaml.safe_load(f)
+    except FileNotFoundError:
+        raise FileNotFoundError(f"Deployment configuration file not found: {config_path}")
+    except yaml.YAMLError as e:
+        raise ValueError(f"Error parsing YAML configuration file {config_path}: {e}")
 
 def deploy_model():
     """Deploys the MLflow model to Kubernetes using provided templates."""
+
+    deployment_config = load_deployment_config()
+    mlflow_model_uri = deployment_config.get("model_uri")
+    replicas = deployment_config.get("replicas", 1)
+
+    if not mlflow_model_uri:
+        raise ValueError("Error: 'model_uri' must be specified in model_deployment_config.yaml")
+    if not isinstance(replicas, int) or replicas < 1:
+        raise ValueError("Error: 'replicas' must be a positive integer in model_deployment_config.yaml")
 
     with open("templates/production_deployment_template.yaml", "r") as f:
         deployment_template = f.read()
@@ -18,7 +37,8 @@ def deploy_model():
 
     # Fill in the templates with the provided information
     deployment_definition = deployment_template.format(
-        mlflow_model_uri=os.environ.get("MLFLOW_MODEL_URI"),
+        replicas=replicas,
+        mlflow_model_uri=mlflow_model_uri,
         mlflow_tracking_uri=os.environ.get("MLFLOW_TRACKING_URI"),
         mlflow_s3_endpoint_url=os.environ.get("MLFLOW_S3_ENDPOINT_URL"),
         mlflow_s3_ignore_tls=os.environ.get("MLFLOW_S3_IGNORE_TLS"),
