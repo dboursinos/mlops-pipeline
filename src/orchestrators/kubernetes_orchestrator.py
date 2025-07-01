@@ -14,33 +14,33 @@ load_dotenv("s3.env")
 load_dotenv("mlflow.env")
 
 try:
-    with open("./src/training/config.yaml", "r") as f:
+    with open("./src/config/training_config.yaml", "r") as f:
         config = yaml.safe_load(f)
 
     if not isinstance(config, dict):
-        raise ValueError("Config file 'config.yaml' must contain a dictionary at its root.")
+        raise ValueError("Config file 'training_config.yaml' must contain a dictionary at its root.")
 
     data_files = config.get("data_files", {})
     models_config = config.get("models", [])
     kubernetes_config = config.get("kubernetes_config", {})
 
     if not isinstance(data_files, dict):
-        raise ValueError("The 'data_files' section in config.yaml must be a dictionary.")
+        raise ValueError("The 'data_files' section in training_config.yaml must be a dictionary.")
     if not isinstance(models_config, list):
-        raise ValueError("The 'models' section in config.yaml must be a list of model definitions.")
+        raise ValueError("The 'models' section in training_config.yaml must be a list of model definitions.")
     if not models_config:
-        raise ValueError("No models defined in config.yaml under 'models' section.")
+        raise ValueError("No models defined in training_config.yaml under 'models' section.")
     if not isinstance(kubernetes_config, dict):
-        raise ValueError("The 'kubernetes_config' section in config.yaml must be a dictionary.")
+        raise ValueError("The 'kubernetes_config' section in training_config.yaml must be a dictionary.")
     K8S_NAMESPACE = kubernetes_config.get("namespace", "default")
     MAX_CONCURRENT_JOBS = kubernetes_config.get("max_concurrent_jobs", 3)
     POLLING_INTERVAL_SECONDS = kubernetes_config.get("polling_interval_seconds", 15)
 
 except FileNotFoundError:
-    print("Error: config.yaml not found. Please create it with model and hyperparameter definitions.")
+    print("Error: training_config.yaml not found. Please create it with model and hyperparameter definitions.")
     exit(1)
 except yaml.YAMLError as e:
-    print(f"Error parsing config.yaml: {e}")
+    print(f"Error parsing training_config.yaml: {e}")
     exit(1)
 except ValueError as e:
     print(f"Configuration Error: {e}")

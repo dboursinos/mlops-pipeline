@@ -5,17 +5,17 @@ import multiprocessing
 import yaml
 
 try:
-    with open("./src/training/config.yaml", "r") as f:
+    with open("./src/config/training_config.yaml", "r") as f:
         config = yaml.safe_load(f)
     hyperparameter_ranges = config.get("hyperparameters", {})
     image_name = config.get("image")
     if not image_name:
-        raise ValueError("Image name not found in config.yaml. Please specify 'image'.")
+        raise ValueError("Image name not found in training_config.yaml. Please specify 'image'.")
 except FileNotFoundError:
-    print("Error: config.yaml not found. Please create it with hyperparameter and image definitions.")
+    print("Error: training_config.yaml not found. Please create it with hyperparameter and image definitions.")
     exit(1)
 except yaml.YAMLError as e:
-    print(f"Error parsing config.yaml: {e}")
+    print(f"Error parsing training_config.yaml: {e}")
     exit(1)
 except ValueError as e:
     print(f"Configuration Error: {e}")

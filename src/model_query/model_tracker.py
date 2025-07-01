@@ -30,7 +30,7 @@ def validate_config(config: Dict[str, Any]) -> None:
             raise ValueError(f"Invalid type for {param['name']}: {param['type']}")
 
 def load_config():
-    with open('./src/model_query/metrics_config.yaml') as f:
+    with open('./src/config/metrics_config.yaml') as f:
         return yaml.safe_load(f)
 
 def get_tracking_uri():
