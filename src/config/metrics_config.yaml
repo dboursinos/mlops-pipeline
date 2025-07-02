@@ -4,21 +4,20 @@ metrics_to_sort:
   - name: test_accuracy
     ascending: true
 parameters_to_include:
-  - name: C
-    type: float
+  #- name: C
+    #type: float
   - name: model_type
     type: str
-  #- {name: learning_rate, type: float}
+  - {name: learning_rate, type: float}
   - {name: batch_size, type: int}
-  #- {name: model_type, type: str}
 parameter_filters:
   numeric_ranges:
-    C:
-      min: 0.2
-      max: 0.7
-    #learning_rate:
-      #min: 0.001
-      #max: 0.01
+    #C:
+      #min: 0.2
+      #max: 0.7
+    learning_rate:
+      min: 0.001
+      max: 0.01
     #batch_size:
       #min: 32
   categorical:
