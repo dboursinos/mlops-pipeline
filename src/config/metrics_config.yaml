@@ -4,8 +4,8 @@ metrics_to_sort:
   - name: test_accuracy
     ascending: true
 parameters_to_include:
-  - name: C
-    type: float
+  #- name: C
+    #type: float
   - name: model_type
     type: str
   #- {name: learning_rate, type: float}
@@ -27,7 +27,7 @@ parameter_filters:
       # mode: "include" or "exclude" (default: include)
 experiment_filter:
   include:
-    experiment_names: ["Experiment1", "Production Models", "Research"]
+    experiment_names: ["Experiment2", "Production Models", "Research"]
   # exclude: ["Archived"]  # Alternative
 output:
   report_file: "./src/reports/model_report_{date}.txt"

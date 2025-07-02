@@ -20,10 +20,13 @@ try:
     if not isinstance(config, dict):
         raise ValueError("Config file 'training_config.yaml' must contain a dictionary at its root.")
 
+    experiment_name = config.get("experiment_name", "default_experiment")
     data_files = config.get("data_files", {})
     models_config = config.get("models", [])
     kubernetes_config = config.get("kubernetes_config", {})
 
+    if not isinstance(experiment_name, str):
+        raise ValueError("The 'experiment_name' section in training_config.yaml must be a string.")
     if not isinstance(data_files, dict):
         raise ValueError("The 'data_files' section in training_config.yaml must be a dictionary.")
     if not isinstance(models_config, list):
@@ -193,7 +196,7 @@ def deploy_job(job_params: dict):
         "MINIO_SECRET_KEY": os.environ.get("MINIO_SECRET_KEY"),
         "MINIO_BUCKET": os.environ.get("MINIO_BUCKET"),
         "MLFLOW_TRACKING_URI": os.environ.get("MLFLOW_TRACKING_URI"),
-        "MLFLOW_EXPERIMENT_NAME": os.environ.get("MLFLOW_EXPERIMENT_NAME"),
+        "MLFLOW_EXPERIMENT_NAME": experiment_name,
         "MLFLOW_S3_ENDPOINT_URL": os.environ.get("MLFLOW_S3_ENDPOINT_URL"),
         "AWS_ACCESS_KEY_ID": os.environ.get("MINIO_ACCESS_KEY"),
         "AWS_SECRET_ACCESS_KEY": os.environ.get("MINIO_SECRET_KEY")
