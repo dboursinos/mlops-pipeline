@@ -20,10 +20,10 @@ def deploy_model():
     """Deploys the MLflow model to Kubernetes using provided templates."""
 
     deployment_config = load_deployment_config()
-    mlflow_model_uri = deployment_config.get("model_uri")
+    mlflow_run_uuid = deployment_config.get("run_uuid")
     replicas = deployment_config.get("replicas", 1)
 
-    if not mlflow_model_uri:
+    if not mlflow_run_uuid:
         raise ValueError("Error: 'model_uri' must be specified in model_deployment_config.yaml")
     if not isinstance(replicas, int) or replicas < 1:
         raise ValueError("Error: 'replicas' must be a positive integer in model_deployment_config.yaml")
@@ -34,6 +34,8 @@ def deploy_model():
         service_template = f.read()
     with open("templates/production_ingress_template.yaml", "r") as f:
         ingress_template = f.read()
+
+    mlflow_model_uri = f"runs:/{mlflow_run_uuid}/model"
 
     # Fill in the templates with the provided information
     deployment_definition = deployment_template.format(

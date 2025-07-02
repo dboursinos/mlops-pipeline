@@ -239,6 +239,7 @@ if __name__ == '__main__':
 
     total_jobs_to_schedule = len(pending_jobs)
 
+    print(f"Experiment Name: {experiment_name}")
     print(f"Total jobs to schedule: {total_jobs_to_schedule}")
     print(f"Maximum concurrent jobs: {MAX_CONCURRENT_JOBS}")
     print(f"Kubernetes Namespace: {K8S_NAMESPACE}")

@@ -10,11 +10,9 @@ with open('./data/X_test.pkl', 'rb') as f:
 with open('./data/y_test.pkl', 'rb') as f:
     y_test = pickle.load(f)
 
-# Get the first input and expected output
 input_data = x_test[0]
 expected_output = y_test[0]
 
-# Ensure input_data is a NumPy array, add batch dimension if needed, and cast to float32
 if isinstance(input_data, np.ndarray) and input_data.ndim == 1:
     input_data = np.expand_dims(input_data, axis=0)
 
@@ -41,7 +39,6 @@ try:
     # Get the raw prediction output from the first sample
     raw_prediction_output = response.json()["predictions"][0]
 
-    # --- START OF FIX FOR MULTIPLE MODEL TYPES ---
     prediction = None
     if isinstance(raw_prediction_output, dict):
         # PyTorch model output: {'0': score_0, '1': score_1}
@@ -60,25 +57,18 @@ try:
         # Direct scalar prediction (e.g., 1 or 0.7 if it's a probability needing rounding)
         prediction = int(round(raw_prediction_output)) # Round if it could be a probability
 
-    # --- END OF FIX ---
-
-    print("API Response (raw):", raw_prediction_output) # Print raw output for debugging
+    print("API Response (raw):", raw_prediction_output)
     print("Predicted Class:", prediction)
 
-    # Ensure expected_output is a scalar for comparison (e.g., 0, 1)
     if isinstance(expected_output, np.ndarray):
-        if expected_output.ndim == 0: # Handle 0-dimensional NumPy array (scalar)
+        if expected_output.ndim == 0:
             expected_output = expected_output.item()
-        elif expected_output.ndim == 1 and expected_output.size == 1: # Handle 1-dimensional array with 1 element
+        elif expected_output.ndim == 1 and expected_output.size == 1:
             expected_output = expected_output[0].item()
         else:
-            # Fallback for multi-dimensional or multi-element arrays if needed,
-            # though typically expected_output would be a single class label.
             expected_output = expected_output.tolist()
 
-    # Ensure expected_output is an integer for comparison if it was originally float
     expected_output = int(expected_output)
-
 
     if prediction == expected_output:
         print("✅ Prediction is correct!")

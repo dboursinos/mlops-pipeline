@@ -35,7 +35,7 @@ RUN ln -s /usr/local/bin/pip3.13 /usr/local/bin/pip
 COPY ./docker/requirements/requirements.sklearn.txt .
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.sklearn.txt
 
 # Configure DVC (You may need to set AWS credentials as environment variables)
 # Example:
@@ -44,7 +44,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 
 # Copy the training script
-COPY ../src/training/train_logistic_regression.py .
+COPY ../src/training/train_logistic_regression.py src/training/train_logistic_regression.py
 
 # Command to run the training script
-CMD ["python", "train.py"]
+CMD ["python", "src/training/train_logistic_regression.py"]
