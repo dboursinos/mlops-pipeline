@@ -55,7 +55,7 @@ inference-one-input:
 	@uv run python ./src/inference_api/inference_test.py
 
 select-model:
-	@uv run python ./src/model_query/model_tracker.py
+	@uv run python ./src/model_query/model_selector.py
 
 generate-data:
 	@uv run python ./src/data_gen/data_gen.py
